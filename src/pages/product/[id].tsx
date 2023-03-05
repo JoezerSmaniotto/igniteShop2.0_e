@@ -2,46 +2,31 @@ import axios from "axios";
 import { GetStaticPaths, GetStaticProps } from 'next';
 import Image from 'next/image';
 import Head from "next/head";
+import { useRouter } from "next/router";
 import { useState } from "react";
 import Stripe from "stripe"
 import { stripe } from '../../lib/stripe';
 import { ImageContainer, ProductContainer, ProductDetails } from '../../styles/pages/product';
+import { TheProduct } from "@/contexts/CartContext";
+import { useCart } from '../../hooks/useCart';
 
 
 interface ProductProps {
-  product: {
-    id: string;
-    name: string;
-    imageUrl: string;
-    price: string;
-    description: string;
-    defaultPriceId: string;
-  }
+  product: TheProduct;
 }
 
-
 export default function Product({product}:ProductProps){
-  const [isCreatingCheckoutSession, setIsCreatingCheckoutSession] = useState(false);
+   const { isFallback } = useRouter();
 
-  async function handleBuyButton() {
-    try {
-      setIsCreatingCheckoutSession(true);
+  const { addToCart, checkIfItemAlreadyExistsInCart } = useCart();
+  
 
-      const response = await axios.post('/api/checkout', {
-        priceId: product.defaultPriceId,
-      })
-      // Gera o retorno da rota /api/checkout, que é uma link e redireiciona para lá,para neste caso concluir a compra
-      const { checkoutUrl } = response.data;
-      // Rota externa
-      window.location.href = checkoutUrl;
-    } catch (err) {
-      // Conectar com uma ferramenta de observabilidade (Datadog / Sentry)
-      console.log("err:", err)
-      setIsCreatingCheckoutSession(false);
-
-      alert('Falha ao redirecionar ao checkout!')
-    }
+  if (isFallback) {
+    return <p>Loading...</p>;
   }
+
+  const itemAlreadyInCart = checkIfItemAlreadyExistsInCart(product);
+
 
     return (
       <>
@@ -58,8 +43,13 @@ export default function Product({product}:ProductProps){
 
                 <p>{product.description}</p>
 
-                <button disabled={isCreatingCheckoutSession} onClick={handleBuyButton}>
-                  Comprar agora
+                <button
+                  disabled={itemAlreadyInCart!}
+                  onClick={() => addToCart(product)}
+                >
+                  {itemAlreadyInCart!
+                    ? "Produto já está no carrinho"
+                    : "Colocar na sacola"}
                 </button>
             </ProductDetails>
         </ProductContainer>
@@ -81,7 +71,7 @@ export const getStaticPaths: GetStaticPaths = async () => { //Async
     paths: [
         {params: {id: 'prod_NNIaQYqGC5Bg3w'}},
     ],
-    fallback: 'blocking',
+    fallback: true,
   }
 }
 
@@ -96,7 +86,7 @@ o GetStaticProps Recebe como parametro
 mas poderia ser um obj {} vazio.
 */
 export const getStaticProps: GetStaticProps<any, { id: string }> = async ({ params }) => {
-  const productId = params.id;
+  const productId = params!.id;
 
   const product = await stripe.products.retrieve(productId, {
     expand: ['default_price']
@@ -113,7 +103,8 @@ export const getStaticProps: GetStaticProps<any, { id: string }> = async ({ para
         price: new Intl.NumberFormat('pt-BR', {
           style: 'currency',
           currency: 'BRL'
-        }).format(price.unit_amount / 100),
+        }).format(price.unit_amount! / 100),
+        numberPrice: price.unit_amount! / 100,
         description: product.description,
         defaultPriceId: price.id
       }

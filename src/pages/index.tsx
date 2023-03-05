@@ -7,10 +7,15 @@ import { stripe } from '../lib/stripe';
 
 import { useKeenSlider} from 'keen-slider/react'
 import 'keen-slider/keen-slider.min.css'
+import useEmblaCarousel from "embla-carousel-react"
 
 import { HomeContainer, Product } from '@/styles/pages/home'
 
 import Stripe from "stripe"
+import { CartButton } from '../components/CartButton/index';
+import { useCart } from '../hooks/useCart';
+import { TheProduct } from '@/contexts/CartContext';
+import { MouseEvent } from "react"
 
 interface HomeProps {
   products: {
@@ -29,6 +34,13 @@ export default function Home({products}: HomeProps) {
       spacing: 48,
     }
   })
+
+  const { addToCart, checkIfItemAlreadyExistsInCart } = useCart()
+   function handleAddToCart(e: MouseEvent<HTMLButtonElement>, product: TheProduct) {
+    e.preventDefault()
+    addToCart(product)
+  }
+
   return (
     <>
       <Head>
@@ -41,8 +53,16 @@ export default function Home({products}: HomeProps) {
               <Product className="keen-slider__slide">
                 <Image src={product.imageUrl} width={520} height={480} alt=""/>
                 <footer>
-                  <strong>{product.name}</strong>
-                  <span>{product.price}</span>
+                  <div>
+                    <strong>{product.name}</strong>
+                    <span>{product.price}</span>
+                  </div>
+                    <CartButton 
+                      color='green' 
+                      size='large' 
+                      disabled={checkIfItemAlreadyExistsInCart(product)!}
+                      onClick={(e) => handleAddToCart(e, product)} 
+                    />
                 </footer>
               </Product>
             </Link>
@@ -70,7 +90,9 @@ export const getStaticProps: GetStaticProps = async() => {
       price: new Intl.NumberFormat('pt-BR', {
         style: 'currency',
         currency: 'BRL'
-      }).format(price.unit_amount / 100),
+      }).format(price.unit_amount! / 100),
+      numberPrice: price.unit_amount! / 100,
+      defaultPriceId: price.id
     }
   })
 
