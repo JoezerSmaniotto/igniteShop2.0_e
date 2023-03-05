@@ -45,7 +45,7 @@ export function Cart() {
   return(
     <Dialog.Root>
       <Dialog.Trigger asChild>
-        <CartButton />
+        <CartButton showBadge={true} />
       </Dialog.Trigger>
 
       <Dialog.Portal>

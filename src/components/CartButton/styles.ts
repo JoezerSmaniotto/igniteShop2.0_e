@@ -58,3 +58,34 @@ export const CartButtonContainer = styled('button', {
     size: 'medium',
   }
 })
+
+
+export const Badge = styled('span', {
+display: 'flex',
+flexDirection: 'column',
+justifyContent: 'center',
+alignItems: 'center',
+padding: 0,
+gap: 8,
+
+position: 'absolute',
+width: 24,
+height: 24,
+right: -7,
+top: -7,
+
+/* Brand/Principal */
+
+background: '#00875F',
+/* Grayscale/Background */
+
+border: '3px solid #121214',
+borderRadius: 1000,
+
+/* Inside auto layout */
+
+flex: 'none',
+order: 1,
+flexGrow: 0,
+zIndex: 1,
+})

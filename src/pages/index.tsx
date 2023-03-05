@@ -54,7 +54,7 @@ export default function Home({products}: HomeProps) {
                 <Image src={product.imageUrl} width={520} height={480} alt=""/>
                 <footer>
                   <div>
-                    <strong>{product.name}</strong>
+                    <strong>{product.name}</strong> {''}
                     <span>{product.price}</span>
                   </div>
                     <CartButton 
